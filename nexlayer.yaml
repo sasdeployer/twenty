@@ -1,9 +1,52 @@
 application:
   name: fast-iris-twenty
   pods:
-    - name: app
-      image: "# filled by pipeline"
+    # ---------------------------------------------------------------------
+    # Twenty server (serves BOTH the frontend and the GraphQL/REST backend
+    # on port 3000). Uses the official prebuilt image — no source build.
+    # Runs DB migrations on startup.
+    # ---------------------------------------------------------------------
+    - name: server
+      image: docker.io/twentycrm/twenty:latest
       path: /
       servicePorts:
         - 3000
-      vars: {}
+      vars:
+        NODE_PORT: "3000"
+        SERVER_URL: "<% URL %>"
+        PG_DATABASE_URL: "postgres://postgres:edf580cd7afc5362a5caf488db8c6d64@db.pod:5432/default"
+        REDIS_URL: "redis://redis.pod:6379"
+        STORAGE_TYPE: local
+        ENCRYPTION_KEY: "YVVIGMmAohhpT3PhRQ8KcLlkknJw7Y5U+/3TZvoJNQ4="
+        APP_SECRET: "Yi26lKa1ACmDupDYEoJdr8gM59dYntGZGUN9oLjELkM="
+      volumes:
+        - name: server-storage
+          mountPath: /app/packages/twenty-server/.local-storage
+          size: 10Gi
+
+    # ---------------------------------------------------------------------
+    # PostgreSQL 16 — Twenty's primary datastore.
+    # ---------------------------------------------------------------------
+    - name: db
+      image: docker.io/library/postgres:16
+      servicePorts:
+        - 5432
+      vars:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: edf580cd7afc5362a5caf488db8c6d64
+        POSTGRES_DB: default
+        # PGDATA points to a subdir so the PVC's lost+found doesn't break initdb
+        PGDATA: /var/lib/postgresql/data/pgdata
+      volumes:
+        - name: db-data
+          mountPath: /var/lib/postgresql
+          size: 10Gi
+
+    # ---------------------------------------------------------------------
+    # Redis — queues and caching (BullMQ). Default config uses no maxmemory
+    # limit, so it never evicts (required by Twenty's job queue).
+    # ---------------------------------------------------------------------
+    - name: redis
+      image: docker.io/library/redis:7-alpine
+      servicePorts:
+        - 6379
