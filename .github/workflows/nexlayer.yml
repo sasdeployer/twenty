@@ -88,7 +88,7 @@ jobs:
             [ -n "$RUNTIME" ] && echo "**Runtime:** $RUNTIME"
             [ "$FIX_ATTEMPTS" -gt 0 ] && echo "**Auto-fixes applied:** $FIX_ATTEMPTS"
             [ -n "$PR_URL" ] && echo "**Config PR:** $PR_URL"
-          } >> "$GITHUB_STEP_SUMMARY"
+          } >> "$GITHUB_STEP_SUMMARY" || true   # cosmetic summary must never fail a live deploy under set -e
 
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request' && steps.deploy.outputs.url != ''
