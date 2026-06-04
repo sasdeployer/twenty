@@ -1,0 +1,9 @@
+application:
+  name: fast-iris-twenty
+  pods:
+    - name: app
+      image: "# filled by pipeline"
+      path: /
+      servicePorts:
+        - 3000
+      vars: {}
