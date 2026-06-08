@@ -1,3 +1,5 @@
+# probe 2026-06-08: re-push to observe Nexlayer pipeline behavior
+# (does it preserve this hand-authored config, or regenerate/clobber it?)
 application:
   name: fast-iris-twenty
   pods:
